@@ -1,0 +1,110 @@
+#include <cctype>
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+using namespace std;
+const long long N=1e9+10;
+long long data[100005];
+int n,m;
+long long p;
+struct node
+{
+	long long mul=1,add=0,a=0;
+}ord[400005];
+void build(long long l,long long r,long long x)
+{
+	if(l==r)
+	{
+		ord[x].a=data[l]%p;
+		return;
+	}
+	long long mid=(l+r)/2;
+	build(l,mid,x*2);
+	build(mid+1,r,x*2+1);
+	ord[x].a=(ord[x*2].a+ord[x*2+1].a)%p;
+}
+void pushdown(long long x,long long l,long long r)
+{
+    long long m=(l+r)/2;
+    ord[x*2].a=(ord[x*2].a*ord[x].mul+ord[x].add*(m-l+1))%p;
+    ord[x*2+1].a=(ord[x*2+1].a*ord[x].mul+ord[x].add*(r-m))%p;
+    ord[x*2].mul=(ord[x*2].mul*ord[x].mul)%p;
+    ord[x*2+1].mul=(ord[x*2+1].mul*ord[x].mul)%p;
+    ord[x*2].add=(ord[x*2].add*ord[x].mul+ord[x].add)%p;
+    ord[x*2+1].add=(ord[x*2+1].add*ord[x].mul+ord[x].add)%p;
+    ord[x].mul=1;
+    ord[x].add=0;
+    return;
+}
+void work(long long l,long long r,long long k,long long a,long long b,long long x)
+{
+	if(a<=l&&r<=b)
+	{
+		ord[x].a=(ord[x].a+k*(r-l+1))%p;
+		ord[x].add=(ord[x].add+k)%p;
+		return;
+	}
+	pushdown(x,l,r);
+	long long mid=(l+r)/2;
+	if(a<=mid) work(l,mid,k,a,b,x*2);
+	if(b>mid) work(mid+1,r,k,a,b,x*2+1);
+	ord[x].a=(ord[x*2].a+ord[x*2+1].a)%p;
+	return;
+}
+void workc(long long l,long long r,long long k,long long a,long long b,long long x)
+{
+	if(a<=l&&r<=b)
+	{
+		ord[x].mul=(ord[x].mul*k)%p;
+		ord[x].add=(ord[x].add*k)%p;
+		ord[x].a=(k*ord[x].a)%p;
+		return;
+	}
+	pushdown(x,l,r);
+	long long mid=(l+r)/2;
+	if(a<=mid) workc(l,mid,k,a,b,x*2);
+	if(b>mid) workc(mid+1,r,k,a,b,x*2+1);
+	ord[x].a=(ord[x*2].a+ord[x*2+1].a)%p;
+	return;
+}
+long long Que(long long l,long long r,long long a,long long b,long long x)
+{
+	if(a<=l&&r<=b)
+	{
+		return ord[x].a%p;
+	}
+	pushdown(x,l,r);
+	long long mid=(l+r)/2,sum=0;
+	if(a<=mid) sum+=Que(l,mid,a,b,x*2);
+	if(b>mid) sum=(sum+Que(mid+1,r,a,b,x*2+1))%p;
+	return sum%p;
+}
+int main()
+{
+	int s,x,y;
+	scanf("%d%d%lld",&n,&m,&p);
+	for(int i=1;i<=n;i++)
+	{
+		scanf("%lld",&data[i]);
+	}
+	build(1,n,1);
+	for(int i=1;i<=m;i++)
+	{
+		scanf("%d%d%d",&s,&x,&y);
+		if(s==1)
+		{
+			long long k;
+			scanf("%lld",&k);
+			workc(1,n,k,x,y,1);
+		}
+		if(s==2)
+		{
+			long long k;
+			scanf("%lld",&k);
+			work(1,n,k,x,y,1);
+		}
+		if(s==3)
+			printf("%lld\n",Que(1,n,x,y,1)%p);
+	}
+	return 0;
+}
